@@ -34,6 +34,7 @@
 from boto.roboto.awsqueryrequest import AWSQueryRequest
 from boto.roboto.param import Param
 import euca2ools.commands.euare
+import euca2ools.utils
 
 
 class UpdateUser(AWSQueryRequest):
@@ -51,25 +52,46 @@ class UpdateUser(AWSQueryRequest):
             ,
         ), Param(
         name='NewPath',
-        short_name='n',
+        short_name='p',
         long_name='new-path',
         ptype='string',
         optional=True,
         doc=""" New path for the User. Include this parameter only if you're changing the User's path. """ ,
         ), Param(
         name='NewUserName',
-        short_name=None,
+        short_name='n',
         long_name='new-user-name',
         ptype='string',
         optional=True,
         doc=""" New name for the User. Include this parameter only if you're changing the User's name. """ ,
+        ), Param(
+        name='Enabled',
+        short_name=None,
+        long_name='enabled',
+        ptype='string',
+        optional=True,
+        doc=""" [Eucalyptus extension] 'true' if to set user to be enabled. Otherwise 'false'. """ ,
+        ), Param(
+        name='RegStatus',
+        short_name=None,
+        long_name='reg-status',
+        ptype='string',
+        optional=True,
+        doc=""" [Eucalyptus extension] New registration status for user. Pick one from REGISTERED, APPROVED or CONFIRMED (use any case combination as you want). Only CONFIRMED user is valid to access the system. """ ,
+        ), Param(
+        name='PasswordExpiration',
+        short_name=None,
+        long_name='pwd-expires',
+        ptype='string',
+        optional=True,
+        doc=""" [Eucalyptus extension] New password expiration date. Use ISO8601 format. """ ,
         ), Param(
         name='DelegateAccount',
         short_name=None,
         long_name='delegate',
         ptype='string',
         optional=True,
-        doc=""" [Eucalyptus extension] Use the parameter only as the system admin to act as the account admin of the specified account without changing to account admin's role. """,
+        doc=""" [Eucalyptus extension] Process this command as if the administrator of the specified account had run it. This option is only usable by cloud administrators. """,
         )]
 
     def cli_formatter(self, data):
@@ -79,4 +101,5 @@ class UpdateUser(AWSQueryRequest):
         return self.send(**args)
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()

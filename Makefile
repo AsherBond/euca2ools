@@ -39,34 +39,27 @@ MANPAGES		=	$(shell echo $(BINLIST) | sed -e 's%$(BINDIR)/%$(MANDIR)/%g' -e 's/ 
 PREFIX			=	/usr/local
 BASH_COMPLETION		=	/etc/bash_completion.d
 UTILDIR			=	util
- 
+MANPREFIX		=	$(PREFIX)
+
 .PHONY: man all install clean distclean
 
 all: install
 
 man: $(BINLIST)
-	@echo "Re-generating manpages..."
 	@which help2man > /dev/null || { echo "You'll need to install help2man to re-generate the manpages"; exit 1; }
-	@mkdir -p $(MANDIR);
-	@rm -rf $(MANDIR)/*;
-	@export PYTHONPATH=$(CURDIR)$${PYTHONPATH:+:${PYTHONPATH}}; \
-	    for x in $(BINLIST); do echo "  $${x##*/}"; \
-	        DESCR=`$$x --help | head -n2 | tail -n1`; \
-	        help2man $$x -N -o "$(MANDIR)/$${x##*/}.1" -n "Eucalyptus tool: $${DESCR}  " || exit; \
-	    done
+	@sh -x $(CURDIR)/generate-manpages.sh
 
 install:
-	python setup.py install
-	@install -o root -m 755 -d $(PREFIX)/man/man1
-	@if [ -d $(MANDIR) ]; then install -o root -m 644  $(MANDIR)/* $(PREFIX)/man/man1; fi
-	@if [ -d $(BASH_COMPLETION) ]; then install -o root -m 644  $(UTILDIR)/* $(BASH_COMPLETION); fi
- 
+	python setup.py install --prefix=$(DESTDIR)$(PREFIX)
+	@install -m 755 -d $(DESTDIR)$(MANPREFIX)/man/man1
+	@if [ -d $(MANDIR) ]; then install -m 644  $(MANDIR)/* $(DESTDIR)$(MANPREFIX)/man/man1; fi
+	@if [ -d $(DESTDIR)$(BASH_COMPLETION) ]; then install -m 644  $(UTILDIR)/* $(DESTDIR)$(BASH_COMPLETION); fi
+
 distclean clean:
-	@for subdir in $(SUBDIRS); do \
-		(cd $$subdir && $(MAKE) $@) || exit $$? ; done
+	echo "Nothing to do for clean"
 
 uninstall:
 	@for x in $(BINLIST); do \
-		rm -f $(PREFIX)/bin/$$x ; \
-		rm -f $(PREFIX)/man/man1/`basename $$x`.1; done
-	@if [ -d $(BASH_COMPLETION) ]; then rm $(BASH_COMPLETION)/euca2ools; fi 
+		rm -f $(DESTDIR)$(PREFIX)/bin/$$x ; \
+		rm -f $(DESTDIR)$(MANPREFIX)/man/man1/`basename $$x`.1; done
+	@if [ -d $(DESTDIR)$(BASH_COMPLETION) ]; then rm $(DESTDIR)$(BASH_COMPLETION)/euca2ools; fi

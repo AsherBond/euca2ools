@@ -36,6 +36,7 @@ from boto.roboto.param import Param
 import euca2ools.commands.euare
 import euca2ools.commands.euare.addusertogroup
 import euca2ools.commands.euare.createaccesskey
+import euca2ools.utils
 
 
 class CreateUser(AWSQueryRequest):
@@ -85,7 +86,7 @@ class CreateUser(AWSQueryRequest):
               long_name='delegate',
               ptype='string',
               optional=True,
-              doc=""" [Eucalyptus extension] Use the parameter only as the system admin to act as the account admin of the specified account without changing to account admin's role. """)]
+              doc=""" [Eucalyptus extension] Process this command as if the administrator of the specified account had run it. This option is only usable by cloud administrators. """)]
 
     def cli_formatter(self, data):
         if self.cli_options.verbose:
@@ -102,11 +103,14 @@ class CreateUser(AWSQueryRequest):
             obj = euca2ools.commands.euare.addusertogroup.AddUserToGroup()
             for group_name in self.cli_options.group_name:
                 data['group_name'] = obj.main(group_name=group_name,
-                                              user_name=self.request_params['UserName'])
+                                              user_name=self.request_params['UserName'],
+                                              delegate=self.request_params.get('DelegateAccount'))
         if self.cli_options.create_accesskey:
             obj = euca2ools.commands.euare.createaccesskey.CreateAccessKey()
-            data['access_key'] = obj.main(user_name=self.request_params['UserName'])
+            data['access_key'] = obj.main(user_name=self.request_params['UserName'],
+                                          delegate=self.request_params.get('DelegateAccount'))
         return data
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()

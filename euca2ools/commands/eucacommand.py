@@ -31,12 +31,13 @@
 # Author: Neil Soman neil@eucalyptus.com
 #         Mitch Garnaat mgarnaat@eucalyptus.com
 
+import boto
 import getopt
-import sys
 import os
+import socket
+import sys
 import textwrap
 import urlparse
-import boto
 import euca2ools
 import euca2ools.utils
 import euca2ools.exceptions
@@ -48,13 +49,6 @@ from boto.ec2.blockdevicemapping import BlockDeviceMapping, BlockDeviceType
 from boto.roboto.param import Param
 
 SYSTEM_EUCARC_PATH = os.path.join('/etc', 'euca2ools', 'eucarc')
-
-EC2RegionData = {
-    'us-east-1' : 'ec2.us-east-1.amazonaws.com',
-    'us-west-1' : 'ec2.us-west-1.amazonaws.com',
-    'eu-west-1' : 'ec2.eu-west-1.amazonaws.com',
-    'ap-northeast-1' : 'ec2.ap-northeast-1.amazonaws.com',
-    'ap-southeast-1' : 'ec2.ap-southeast-1.amazonaws.com'}
 
 import bdb
 import traceback
@@ -147,9 +141,9 @@ class EucaCommand(object):
         self.debugger = False
         self.set_debug(debug)
         self.cmd_name = os.path.basename(sys.argv[0])
-        self.setup_environ()
         self.check_for_conflict()
         self.process_cli_args()
+        self.setup_environ()
         # h = NullHandler()
         # logging.getLogger('boto').addHandler(h)
 
@@ -248,7 +242,7 @@ class EucaCommand(object):
                 opt = self.find_option('--access-key')
                 opt.short_name = 'A'
                 opt = self.find_option('--secret-key')
-                opt.short_name = 'A'
+                opt.short_name = 'S'
 
     def find_option(self, op_name):
         for option in self.StandardOptions+self.Options:
@@ -306,7 +300,7 @@ class EucaCommand(object):
             self.display_error_and_exit(msg)
 
     def version(self):
-        print '\tVersion: %s (BSD)' % euca2ools.__version__
+        print 'euca2ools %s (%s)' % (euca2ools.__version__, euca2ools.__codename__)
         sys.exit(0)
 
     def param_usage(self, plist, label, n=30):
@@ -407,7 +401,7 @@ class EucaCommand(object):
 
     def error_exit(self):
         sys.exit(1)
-        
+
     def setup_environ(self):
         envlist = ('EC2_ACCESS_KEY', 'EC2_SECRET_KEY',
                    'S3_URL', 'EC2_URL', 'EC2_CERT', 'EC2_PRIVATE_KEY',
@@ -522,10 +516,9 @@ class EucaCommand(object):
         if self.region_name:
             self.region.name = self.region_name
             try:
-                self.region.endpoint = EC2RegionData[self.region_name]
-            except KeyError:
-                print 'Unknown region: %s' % self.region_name
-                sys.exit(1)
+                self.url = self.get_endpoint_url(self.region.name)
+            except KeyError, err:
+                self.display_error_and_exit(err.message)
         elif not self.url:
             self.url = self.environ['EC2_URL']
             if not self.url:
@@ -536,8 +529,9 @@ class EucaCommand(object):
 
         if not self.region.endpoint:
             self.get_connection_details()
-            self.region.name = 'eucalyptus'
             self.region.endpoint = self.host
+        if not self.region.name:
+            self.region.name = 'eucalyptus'
 
         return boto.connect_ec2(aws_access_key_id=self.ec2_user_access_key,
                                 aws_secret_access_key=self.ec2_user_secret_key,
@@ -611,6 +605,7 @@ class EucaCommand(object):
             if len(parts) > 1:
                 device_name = parts[0]
                 block_dev_type = BlockDeviceType()
+                block_dev_type.delete_on_termination = True
                 value_parts = parts[1].split(':')
                 if value_parts[0].startswith('snap'):
                     block_dev_type.snapshot_id = value_parts[0]
@@ -623,8 +618,23 @@ class EucaCommand(object):
                     except ValueError:
                         pass
                 if len(value_parts) > 2:
-                    if value_parts[2] == 'true':
-                        block_dev_type.delete_on_termination = True
+                    if value_parts[2] == 'false':
+                        block_dev_type.delete_on_termination = False
                 block_device_map[device_name] = block_dev_type
         return block_device_map
 
+    def get_endpoint_url(self, region_name):
+        """
+        Get the URL needed to reach a region with a given name.
+
+        This currently only works with EC2.  In the future it may use other
+        means to also work with Eucalyptus.
+        """
+        endpoint_template = 'https://ec2.%s.amazonaws.com/'
+        endpoint_url      = endpoint_template % region_name
+        endpoint_dnsname  = urlparse.urlparse(endpoint_url).hostname
+        try:
+            socket.getaddrinfo(endpoint_dnsname, None)
+        except socket.gaierror:
+            raise KeyError('Cannot resolve endpoint %s' % endpoint_dnsname)
+        return endpoint_url

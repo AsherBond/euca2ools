@@ -34,6 +34,7 @@
 from boto.roboto.awsqueryrequest import AWSQueryRequest
 from boto.roboto.param import Param
 import euca2ools.commands.euare
+import euca2ools.utils
 
 
 class DeleteAccessKey(AWSQueryRequest):
@@ -61,7 +62,7 @@ class DeleteAccessKey(AWSQueryRequest):
         long_name='delegate',
         ptype='string',
         optional=True,
-        doc=""" [Eucalyptus extension] Use the parameter only as the system admin to act as the account admin of the specified account without changing to account admin's role. """,
+        doc=""" [Eucalyptus extension] Process this command as if the administrator of the specified account had run it. This option is only usable by cloud administrators. """,
         )]
 
     def cli_formatter(self, data):
@@ -71,4 +72,5 @@ class DeleteAccessKey(AWSQueryRequest):
         return self.send(**args)
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()

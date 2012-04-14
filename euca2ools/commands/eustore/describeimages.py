@@ -1,4 +1,3 @@
-#!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
 # Software License Agreement (BSD License)
@@ -38,6 +37,7 @@ import urllib2
 from boto.roboto.param import Param
 from boto.roboto.awsqueryrequest import AWSQueryRequest
 import euca2ools.commands.eustore
+import euca2ools.utils
 
 try:
     import simplejson as json
@@ -56,7 +56,7 @@ class DescribeImages(AWSQueryRequest):
               optional=True,
               ptype='boolean',
               doc="""display more information about images""")
-		  ]
+    ]
 
     def fmtCol(self, value, width):
         valLen = len(value)
@@ -69,13 +69,14 @@ class DescribeImages(AWSQueryRequest):
         self.eustore_url = self.ServiceClass.StoreBaseURL
         if os.environ.has_key('EUSTORE_URL'):
             self.eustore_url = os.environ['EUSTORE_URL']
-        catURL = self.eustore_url + "catalog.json"
-        response = urllib2.urlopen(catURL).read()
+        catURL = self.eustore_url + "catalog"
+        req = urllib2.Request(catURL, headers=self.ServiceClass.RequestHeaders)
+        response = urllib2.urlopen(req).read()
         parsed_cat = json.loads(response)
         if len(parsed_cat) > 0:
             image_list = parsed_cat['images']
             for image in image_list:
-                print self.fmtCol(image['name'],25)+ \
+                print self.fmtCol(image['name'],11)+ \
                       self.fmtCol(image['os'],12)+ \
                       self.fmtCol(image['architecture'],8)+ \
                       self.fmtCol(image['version'],15)+ \
@@ -87,5 +88,6 @@ class DescribeImages(AWSQueryRequest):
                           image['contact']
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()
 

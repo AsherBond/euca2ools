@@ -8,7 +8,7 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")}
 
 Name:          euca2ools
-Version:       2.0
+Version:       2.0.1
 Release:       0%{?dist}
 Summary:       Elastic Utility Computing Architecture Command Line Tools
 
@@ -20,7 +20,7 @@ BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch:     noarch
 
 BuildRequires:  python%{?__python_ver}-devel
-Requires:       python%{?__python_ver}-boto >= 2.0
+Requires:       python%{?__python_ver}-boto >= 2.1
 Requires:       rsync
 Requires:       util-linux
 # %%elseif behaves like %%endif followed by %%if.  Avoid it to reduce confusion.
@@ -82,7 +82,13 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Wed Jun 15 2011 Eucalyptus Release Engineering <support@eucalyptus.com> - 2.0-0
+* Thu Mar 15 2012 Eucalyptus Release Engineering <support@eucalyptus.com> - 2.0.1-0.1
+- Update to 2.0.1
+
+* Tue Feb 14 2012 Eucalyptus Release Engineering <support@eucalyptus.com> - 2.0-0.2
+- Fix euare-usercreate convenience options with --delegate
+
+* Thu Feb  2 2012 Eucalyptus Release Engineering <support@eucalyptus.com> - 2.0-0.1
 - Update to 2.0
 
 * Thu Apr 21 2011 Eucalyptus Release Engineering <support@eucalyptus.com> - 1.4-0.1.alpha1

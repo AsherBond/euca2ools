@@ -35,6 +35,7 @@ from boto.exception import BotoServerError
 from boto.roboto.awsqueryrequest import AWSQueryRequest
 from boto.roboto.param import Param
 import euca2ools.commands.euare
+import euca2ools.utils
 from euca2ools.commands.euare.listuserpolicies import ListUserPolicies
 from euca2ools.commands.euare.deleteuserpolicy import DeleteUserPolicy
 from euca2ools.commands.euare.listgroupsforuser import ListGroupsForUser
@@ -63,26 +64,26 @@ class DeleteUser(AWSQueryRequest):
               long_name='delegate',
               ptype='string',
               optional=True,
-              doc=""" [Eucalyptus extension] Use the parameter only as the system admin to act as the account admin of the specified account without changing to account admin's role. """),
+              doc=""" [Eucalyptus extension] Process this command as if the administrator of the specified account had run it. This option is only usable by cloud administrators. """),
         Param(name='recursive',
               short_name='r',
               long_name='recursive',
               ptype='boolean',
               optional=True,
               request_param=False,
-              doc=""" Deletes the Group, removes all Users from the Group and deletes all Policies associated with the Group."""),
+              doc=""" Deletes the user from associated groups; deletes the user's credentials, policies, and login profiles; and finally deletes the user."""),
         Param(name='IsRecursive',
               short_name='R',
               long_name='recursive-euca',
               ptype='boolean',
               optional=True,
-              doc=""" Deletes the User from associated groups and deletes the User's credentials and policies along with the User. """),
+              doc=""" [Eucalyptus extension] Same as -r, but all operations are performed by the server instead of the client."""),
         Param(name='pretend',
               short_name='p',
               long_name='pretend',
               ptype='boolean',
               optional=True,
-              doc="""Returns a list of credentials and policies that would be deleted, as well as the groups the user would be removed from, if the -r or -R option were actually performed.""")
+              doc=""" Returns a list of credentials and policies that would be deleted, as well as the groups the user would be removed from, if the -r or -R option were actually performed.""")
         ]
 
     def cli_formatter(self, data):
@@ -99,7 +100,7 @@ class DeleteUser(AWSQueryRequest):
             print 'groups'
             for group in data['groups']:
                 print '\t%s' % group['Arn']
-            
+
     def main(self, **args):
         recursive_local = self.cli_options.recursive or \
             args.get('recursive', False)
@@ -150,4 +151,5 @@ class DeleteUser(AWSQueryRequest):
             return self.send(**args)
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()

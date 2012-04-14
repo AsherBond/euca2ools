@@ -34,6 +34,7 @@
 from boto.roboto.awsqueryrequest import AWSQueryRequest
 from boto.roboto.param import Param
 import euca2ools.commands.euare
+import euca2ools.utils
 from euca2ools.commands.euare.listgrouppolicies import ListGroupPolicies
 from euca2ools.commands.euare.deletegrouppolicy import DeleteGroupPolicy
 from euca2ools.commands.euare.getgroup import GetGroup
@@ -56,26 +57,26 @@ class DeleteGroup(AWSQueryRequest):
               long_name='delegate',
               ptype='string',
               optional=True,
-              doc=""" [Eucalyptus extension] Use the parameter only as the system admin to act as the account admin of the specified account without changing to account admin's role. """),
+              doc=""" [Eucalyptus extension] Process this command as if the administrator of the specified account had run it. This option is only usable by cloud administrators. """),
         Param(name='recursive',
               short_name='r',
               long_name='recursive',
               ptype='boolean',
               optional=True,
               request_param=False,
-              doc=""" Deletes the Group, removes all Users from the Group and deletes all Policies associated with the Group."""),
+              doc=""" Removes all Users from the Group, deletes all Policies associated with the Group, then deletes the Group."""),
         Param(name='IsRecursive',
               short_name='R',
               long_name='recursive-euca',
               ptype='boolean',
               optional=True,
-              doc="""[Eucalyptus extension] Exactly like the -r option but performs operations server-side rather than in the client."""),
+              doc=""" [Eucalyptus extension] Same as -r, but all operations are performed by the server instead of the client."""),
         Param(name='pretend',
               short_name='p',
               long_name='pretend',
               ptype='boolean',
               optional=True,
-              doc="""Returns a list of Users and Policies that would be deleted if the -r or -R option were actually performed.""")
+              doc=""" Returns a list of Users and Policies that would be deleted if the -r or -R option were actually performed.""")
         ]
 
     def cli_formatter(self, data):
@@ -115,4 +116,5 @@ class DeleteGroup(AWSQueryRequest):
             return self.send(**args)
 
     def main_cli(self):
+        euca2ools.utils.print_version_if_necessary()
         self.do_cli()

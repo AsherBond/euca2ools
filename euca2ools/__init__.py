@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Software License Agreement (BSD License)
 #
@@ -33,5 +32,5 @@
 # Author: Neil Soman neil@eucalyptus.com
 #       : Mitch Garnaat mgarnaat@eucalyptus.com
 
-__version__ = '2.0.0'
-
+__version__  = 'devel'
+__codename__ = 'Stencil'
